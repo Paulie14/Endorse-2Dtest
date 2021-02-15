@@ -1,3 +1,6 @@
 [submodule "bgem"]
 	path = bgem
 	url = https://github.com/GeoMop/bgem
+[submodule "MLMC"]
+	path = MLMC
+	url = https://github.com/GeoMop/MLMC
