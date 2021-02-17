@@ -1,0 +1,88 @@
+flow123d_version: 3.0.9
+problem: !Coupling_Sequential
+  description: Hydraulic stimulation of fractures connecting two open well ends
+  mesh:
+    mesh_file: <mesh>
+#    regions:
+#      - !Union
+#        name: fractures
+#        regions: <fracture_regions>
+  flow_equation: !Coupling_Iterative
+    input_fields:
+      - region: BULK
+        biot_alpha: 0.17
+        fluid_density: 1000
+    time:
+      end_time: [365, 'd'] #86400 # 1 day
+    iteration_parameter: 1 # affects convergence of HM coupling (defaults to 1, lower value sometimes helps)
+    a_tol: 0
+    r_tol: 1e-3
+    flow_equation: !Flow_Richards_LMH
+        nonlinear_solver:
+          linear_solver: !Petsc
+            a_tol: <flow_solver__a_tol>
+            r_tol: <flow_solver__r_tol>
+#            options: <flow_solver__options>
+        input_fields:
+          - region: BULK
+            conductivity: <bulk_conductivity>
+            storativity: 2.1e-8
+            init_piezo_head: 0    # piezometric head is shifted so that at the tunnel center the pressure height is zero
+#          - region: fractures
+#            cross_section: <fr_cross_section>
+#            conductivity: <fr_conductivity>
+#            storativity: 2e-7
+#            init_piezo_head: 0
+
+          - region: .BOUNDARY
+            bc_type: dirichlet
+            bc_pressure: 300 # 3MPa = p = h*rho*g => h = 300 m
+#            bc_piezo_head: 0
+        output:
+          times: &output_times
+            - step: [30, 'd'] #86400 # 1 day
+          fields:
+            - piezo_head_p0
+            - pressure_p0
+            - velocity_p0
+            - region_id
+        #balance:
+          #cumulative: true
+        output_stream: 
+          format: !vtk
+            variant: ascii
+    mechanics_equation:
+        output_stream:
+          file: mechanics.pvd
+          format: !vtk
+        output:
+          times: *output_times
+          fields:
+#            - { field: displacement, interpolation: P1_average }
+            - displacement
+            - stress
+            - displacement_divergence
+            - region_id
+        solver: !Petsc
+          a_tol: <mechanics_solver__a_tol>
+          r_tol: <mechanics_solver__r_tol>
+          options: <mechanics_solver__options>
+          # -ksp_type cg -pc_type hypre -pc_hypre_type boomeramg
+          #options: -ksp_type cg -pc_type icc -pc_factor_levels 2 -ksp_diagonal_scale -ksp_diagonal_scale_fix -pc_factor_fill 3.0 -ksp_monitor
+        input_fields:
+          - region: BULK
+            young_modulus: 60e9
+            poisson_ratio: 0.2
+#          - region: fractures
+#            young_modulus: 50e0
+#            poisson_ratio: 0.25
+
+          - region: [ .top ]
+            bc_type: traction
+            bc_traction: 11e6
+          - region: [ .right ]
+            bc_type: traction
+            bc_traction: 45e6
+          - region: [ .bottom, .left ]
+            bc_type: displacement_n  # lateral sides can move in tangential direction
+            bc_displacement: 0
