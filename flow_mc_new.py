@@ -152,7 +152,11 @@ class endorse_2Dtest(Simulation):
         if mesh_repo:
             comp_mesh = endorse_2Dtest.sample_mesh_repository(mesh_repo)
         else:
-            comp_mesh = endorse_2Dtest.prepare_mesh(config_dict)
+            # comp_mesh = endorse_2Dtest.prepare_mesh(config_dict, cut_tunnel=False)
+            comp_mesh = endorse_2Dtest.prepare_mesh(config_dict, cut_tunnel=True)
+
+            mesh_bn = os.path.basename(comp_mesh)
+            config_dict["hm_params"]["mesh"] = mesh_bn
 
         # endorse_2Dtest.read_physical_names(config_dict, comp_mesh)
         print("Creating mesh...finished")
@@ -312,47 +316,48 @@ class endorse_2Dtest(Simulation):
         #     yaml.dump(heal_ref_report, f)
         return comp_mesh
 
+    # @staticmethod
+    # def read_physical_names(config_dict, mesh_file):
+    #     """
+    #     Read physical names to set fracture B.C. regions in Flow123d yaml later.
+    #     :param config_dict:
+    #     :param mesh_file:
+    #     :return:
+    #     """
+    #     mesh_bn = os.path.basename(mesh_file)
+    #     reader = gmsh_io.GmshIO()
+    #     reader.filename = mesh_file
+    #     regions = [*reader.read_physical_names()]
+    #
+    #     # fracture regions
+    #     reg_fr = [reg for reg in regions if reg.startswith("fr")]
+    #
+    #     # split boundary fracture regions on left and right well
+    #     reg_fr_left_well = [reg for reg in regions if ".fr" in reg and "left_well" in reg]
+    #     reg_fr_right_well = [reg for reg in regions if ".fr" in reg and "right_well" in reg]
+    #     for model in ["hm_params", *config_dict["variants"]]:
+    #         model_dict = config_dict[model]
+    #         model_dict["mesh"] = mesh_bn
+    #         model_dict["fracture_regions"] = reg_fr
+    #         model_dict["left_well_fracture_regions"] = reg_fr_left_well
+    #         model_dict["right_well_fracture_regions"] = reg_fr_right_well
+    #
+    #     # write grouped physical names into file for later usage (collection when having no mesh available anymore)
+    #     regions_dict = dict()
+    #     regions_dict["fracture_regions"] = reg_fr
+    #     regions_dict["left_well_fracture_regions"] = reg_fr_left_well
+    #     regions_dict["right_well_fracture_regions"] = reg_fr_right_well
+    #     with open('regions.yaml', 'w') as outfile:
+    #         yaml.dump(regions_dict, outfile, default_flow_style=False, Dumper=yaml.CDumper)
+
     @staticmethod
-    def read_physical_names(config_dict, mesh_file):
-        """
-        Read physical names to set fracture B.C. regions in Flow123d yaml later.
-        :param config_dict:
-        :param mesh_file:
-        :return:
-        """
-        mesh_bn = os.path.basename(mesh_file)
-        reader = gmsh_io.GmshIO()
-        reader.filename = mesh_file
-        regions = [*reader.read_physical_names()]
-
-        # fracture regions
-        reg_fr = [reg for reg in regions if reg.startswith("fr")]
-
-        # split boundary fracture regions on left and right well
-        reg_fr_left_well = [reg for reg in regions if ".fr" in reg and "left_well" in reg]
-        reg_fr_right_well = [reg for reg in regions if ".fr" in reg and "right_well" in reg]
-        for model in ["hm_params", *config_dict["variants"]]:
-            model_dict = config_dict[model]
-            model_dict["mesh"] = mesh_bn
-            model_dict["fracture_regions"] = reg_fr
-            model_dict["left_well_fracture_regions"] = reg_fr_left_well
-            model_dict["right_well_fracture_regions"] = reg_fr_right_well
-
-        # write grouped physical names into file for later usage (collection when having no mesh available anymore)
-        regions_dict = dict()
-        regions_dict["fracture_regions"] = reg_fr
-        regions_dict["left_well_fracture_regions"] = reg_fr_left_well
-        regions_dict["right_well_fracture_regions"] = reg_fr_right_well
-        with open('regions.yaml', 'w') as outfile:
-            yaml.dump(regions_dict, outfile, default_flow_style=False, Dumper=yaml.CDumper)
-
-
-    @staticmethod
-    def prepare_mesh(config_dict):
+    def prepare_mesh(config_dict, cut_tunnel):
         mesh_name = config_dict["mesh_name"]
+        if cut_tunnel:
+            mesh_name = mesh_name + "_cut"
         mesh_file = mesh_name + ".msh"
         if not os.path.isfile(mesh_file):
-            endorse_2Dtest.make_mesh(config_dict, mesh_name, mesh_file)
+            endorse_2Dtest.make_mesh(config_dict, mesh_name, mesh_file, cut_tunnel=cut_tunnel)
 
         mesh_healed = mesh_name + "_healed.msh"
         if not os.path.isfile(mesh_healed):
@@ -364,7 +369,7 @@ class endorse_2Dtest(Simulation):
         return mesh_healed
 
     @staticmethod
-    def make_mesh(config_dict, mesh_name, mesh_file):
+    def make_mesh(config_dict, mesh_name, mesh_file, cut_tunnel):
         geom = config_dict["geometry"]
         tunnel_mesh_step = geom['tunnel_mesh_step']
         dimensions = geom["box_dimensions"]
@@ -413,9 +418,15 @@ class endorse_2Dtest(Simulation):
             isec = b_box_fr.select_by_intersect(side_tool)
             box_all.append(isec.modify_regions("." + name))
 
-        tunnel = tunnel_fr.select_by_intersect(tunnel_select)
-        tunnel.set_region("tunnel").mesh_step(tunnel_mesh_step)
-        box_all.extend([box_fr, tunnel])
+        if cut_tunnel:
+            b_tunnel_select = tunnel_select.get_boundary()
+            b_tunnel = b_box_fr.select_by_intersect(b_tunnel_select)
+            b_tunnel.modify_regions(".tunnel").mesh_step(tunnel_mesh_step)
+            box_all.extend([box_fr, b_tunnel])
+        else:
+            tunnel = tunnel_fr.select_by_intersect(tunnel_select)
+            tunnel.set_region("tunnel").mesh_step(tunnel_mesh_step)
+            box_all.extend([box_fr, tunnel])
 
         mesh_groups = [*box_all]
 
