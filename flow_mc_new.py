@@ -4,6 +4,7 @@ import numpy as np
 import itertools
 import collections
 import shutil
+import csv
 import ruamel.yaml as yaml
 from typing import List
 
@@ -164,6 +165,7 @@ class endorse_2Dtest(Simulation):
         if config_dict["mesh_only"]:
             return endorse_2Dtest.empty_result()
 
+        endorse_2Dtest.prepare_hm_input(config_dict)
         print("Running Flow123d - HM...")
         hm_succeed = endorse_2Dtest.call_flow(config_dict, 'hm_params', result_files=["mechanics.msh"])
         if not hm_succeed:
@@ -496,9 +498,37 @@ class endorse_2Dtest(Simulation):
         if len(res) != 0:
             raise Exception("GMSH error - No elements in volume")
 
+    @staticmethod
+    def prepare_hm_input(config_dict):
+        """
+        Prepare FieldFE input file for the TH simulation.
+        :param config_dict: Parsed config.yaml. see key comments there.
+        """
+        bc_pressure_csv = 'bc_pressure_tunnel.csv'
+        if os.path.exists(bc_pressure_csv):
+            return
 
+        end_time = 17
+        time_step = 1
+        times = np.arange(0, end_time, time_step)
+        n_steps = len(times)
+        times = np.append(times, end_time)
 
+        start_val = 300
+        end_val = 0
+        val_step = (end_val-start_val)/n_steps
+        values = np.arange(start_val, end_val, val_step)
+        values = np.append(values, end_val)
 
+        header = "time bc_pressure_tunnel"
+        fmt = "%g"
+        list_rows = np.column_stack((times, values))
+        np.savetxt(bc_pressure_csv, list_rows, fmt=fmt, delimiter=' ', header=header)
+        # with open(bc_pressure_csv, 'w', newline='') as csv_file:
+        #     writer = csv.writer(csv_file)
+        #     writer.writerow(["time", "bc_pressure_tunnel"])
+        #     for t, v in zip(times, values):
+        #         writer.writerow([t, v])
 
 
 
