@@ -165,12 +165,14 @@ class endorse_2Dtest(Simulation):
         if config_dict["mesh_only"]:
             return endorse_2Dtest.empty_result()
 
-        endorse_2Dtest.prepare_hm_input(config_dict)
+        # endorse_2Dtest.prepare_hm_input(config_dict)
         print("Running Flow123d - HM...")
-        hm_succeed = endorse_2Dtest.call_flow(config_dict, 'hm_params', result_files=["mechanics.msh"])
+        hm_succeed = endorse_2Dtest.call_flow(config_dict, 'hm_params', result_files=["flow_observe.yaml"])
         if not hm_succeed:
             raise Exception("HM model failed.")
         print("Running Flow123d - HM...finished")
+
+        endorse_2Dtest.observe_time_plot(config_dict)
 
         print("Finished computation")
 
@@ -498,37 +500,41 @@ class endorse_2Dtest(Simulation):
         if len(res) != 0:
             raise Exception("GMSH error - No elements in volume")
 
-    @staticmethod
-    def prepare_hm_input(config_dict):
-        """
-        Prepare FieldFE input file for the TH simulation.
-        :param config_dict: Parsed config.yaml. see key comments there.
-        """
-        bc_pressure_csv = 'bc_pressure_tunnel.csv'
-        if os.path.exists(bc_pressure_csv):
-            return
+    # @staticmethod
+    # def prepare_hm_input(config_dict):
+    #     """
+    #     Prepare FieldFE input file for the TH simulation.
+    #     :param config_dict: Parsed config.yaml. see key comments there.
+    #     """
+    #     bc_pressure_csv = 'bc_pressure_tunnel.csv'
+    #     if os.path.exists(bc_pressure_csv):
+    #         return
+    #
+    #     end_time = 17
+    #     time_step = 1
+    #     times = np.arange(0, end_time, time_step)
+    #     n_steps = len(times)
+    #     times = np.append(times, end_time)
+    #
+    #     start_val = 300
+    #     end_val = 0
+    #     val_step = (end_val-start_val)/n_steps
+    #     values = np.arange(start_val, end_val, val_step)
+    #     values = np.append(values, end_val)
+    #
+    #     header = "time bc_pressure_tunnel"
+    #     fmt = "%g"
+    #     list_rows = np.column_stack((times, values))
+    #     np.savetxt(bc_pressure_csv, list_rows, fmt=fmt, delimiter=' ', header=header)
+    #     # with open(bc_pressure_csv, 'w', newline='') as csv_file:
+    #     #     writer = csv.writer(csv_file)
+    #     #     writer.writerow(["time", "bc_pressure_tunnel"])
+    #     #     for t, v in zip(times, values):
+    #     #         writer.writerow([t, v])
 
-        end_time = 17
-        time_step = 1
-        times = np.arange(0, end_time, time_step)
-        n_steps = len(times)
-        times = np.append(times, end_time)
+        # PREPARE normal traction on tunnel boundary evolving in time
 
-        start_val = 300
-        end_val = 0
-        val_step = (end_val-start_val)/n_steps
-        values = np.arange(start_val, end_val, val_step)
-        values = np.append(values, end_val)
 
-        header = "time bc_pressure_tunnel"
-        fmt = "%g"
-        list_rows = np.column_stack((times, values))
-        np.savetxt(bc_pressure_csv, list_rows, fmt=fmt, delimiter=' ', header=header)
-        # with open(bc_pressure_csv, 'w', newline='') as csv_file:
-        #     writer = csv.writer(csv_file)
-        #     writer.writerow(["time", "bc_pressure_tunnel"])
-        #     for t, v in zip(times, values):
-        #         writer.writerow([t, v])
 
 
 
@@ -593,3 +599,33 @@ class endorse_2Dtest(Simulation):
 
         fig.tight_layout()  # otherwise the right y-label is slightly clipped
         plt.show()
+
+    @staticmethod
+    def observe_time_plot(config_dict):
+
+        output_dir = config_dict["hm_params"]["output_dir"]
+
+        with open(os.path.join(output_dir, "flow_observe.yaml"), "r") as f:
+            loaded_yaml = yaml.load(f, yaml.CSafeLoader)
+            points = loaded_yaml['points']
+            point_names = [p["name"] for p in points]
+            data = loaded_yaml['data']
+            values = np.array([d["pressure_p0"] for d in data]).transpose()
+            times = np.array([d["time"] for d in data]).transpose()
+
+            v = values[0, 0:]
+
+            import matplotlib.pyplot as plt
+
+            fig, ax1 = plt.subplots()
+            temp_color = ['red', 'green', 'violet', 'blue']
+            ax1.set_xlabel('time [d]')
+            ax1.set_ylabel('pressure [m]')
+            for i in range(0, len(point_names)):
+                ax1.plot(times, values[i, 0:], color=temp_color[i], label=point_names[i])
+
+            ax1.tick_params(axis='y')
+            ax1.legend()
+
+            fig.tight_layout()  # otherwise the right y-label is slightly clipped
+            plt.show()
