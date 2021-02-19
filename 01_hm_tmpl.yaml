@@ -13,8 +13,9 @@ problem: !Coupling_Sequential
         biot_alpha: 0.17
         fluid_density: 1000
     time:
-      init_dt: [1, 'd']
-      end_time: [20, 'd'] #86400 # 1 day
+      init_dt: 1
+      end_time: 10
+      common_time_unit: d
     iteration_parameter: 1 # affects convergence of HM coupling (defaults to 1, lower value sometimes helps)
     a_tol: 0
     r_tol: 1e-8
@@ -38,37 +39,58 @@ problem: !Coupling_Sequential
           - region: .outer_boundary
             bc_type: dirichlet
             bc_pressure: 300 # 3MPa = p = h*rho*g => h = 300 m
+
           - region: .tunnel
             bc_type: dirichlet
-            bc_pressure: !FieldTimeFunction
-              time_function:
-                values: !include_csv
-                  file: bc_pressure_tunnel.csv
-                  separator: " "
-                  n_head_lines: 1
-                  format:
-                    t:
-                      time: $0
-                      unit: 'd'
-                    value: $1
+            bc_pressure: !FieldFormula
+              value: 300
+
+#          - region: .tunnel
+#            time: 0
+#            bc_type: dirichlet
+#            bc_pressure: !FieldFormula
+#              value: 300*(-1/(17*86400)*t + 1) # 1d=86400s
+
+#          - region: .tunnel
+#            time: 17
+#            bc_type: dirichlet
+#            bc_pressure: 0
+#            bc_pressure: !FieldTimeFunction
+#              time_function:
+#                values: !include_csv
+#                  file: bc_pressure_tunnel.csv
+#                  separator: " "
+#                  n_head_lines: 1
+#                  format:
+#                    t:
+#                      time: $0
+#                      unit: 'd'
+#                    value: $1
 
         output:
           times: &output_times
-            - step: [1, 'd'] #86400 # 1 day
+            - step: 1
           fields:
             - piezo_head_p0
             - pressure_p0
             - velocity_p0
             - region_id
+          observe_fields: [pressure_p0]
         #balance:
           #cumulative: true
-        output_stream: 
+        output_stream:
+          file: flow.pvd
           format: !vtk
-            variant: ascii
+          observe_points: &observe_points
+            - { name: HGT1-5, point: [ 0, 5.0, 0 ] }  # HGT1-5: 3.5 + 1.5
+            - { name: HGT1-4, point: [ 0, 7.5, 0 ] }  # HGT1-4: 3.5 + 4
+            - { name: HGT2-4, point: [ 5.875, 0, 0 ] }  # HGT2-4: 4.375 + 1.5
+            - { name: HGT2-3, point: [ 8.375, 0, 0 ] }  # HGT2-3: 4.375 + 4
     mechanics_equation:
         output_stream:
           file: mechanics.pvd
           format: !vtk
+          observe_points: *observe_points
         output:
           times: *output_times
           fields:
@@ -77,6 +99,7 @@ problem: !Coupling_Sequential
             - stress
             - displacement_divergence
             - region_id
+          observe_fields: [displacement]
         solver: !Petsc
           a_tol: <mechanics_solver__a_tol>
           r_tol: <mechanics_solver__r_tol>
@@ -103,6 +126,21 @@ problem: !Coupling_Sequential
           - region: .bottom
             bc_type: displacement
             bc_displacement: 0
+
+#          - region: .tunnel
+#            bc_type: traction
+#            bc_traction: [ 0, 0, 0 ]
           - region: .tunnel
             bc_type: traction
-            bc_displacement: [0, 0, 0]
+            bc_traction: !FieldFormula
+              value: [ 45e6*x / sqrt(x*x+y*y), 11e6*y / sqrt(x*x+y*y), 0 ]
+
+#          - region: .tunnel
+#            time: 0
+#            bc_type: traction
+#            bc_traction: !FieldFormula
+#              value: [45e6*(-1/(17*86400)*t + 1)*x / sqrt(x*x+y*y), 11e6*(-1/(17*86400)*t + 1)*y / sqrt(x*x+y*y), 0] # 1d=86400s
+#          - region: .tunnel
+#            time: 17
+#            bc_type: traction
+#            bc_traction: [0, 0, 0]
