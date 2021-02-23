@@ -43,8 +43,8 @@ geometry:
   box_dimensions: [100, 100]
   # tunnel center
   tunnel_center: [0, 0, 0]
-  tunnel_dimensions: [4.375, 3.5]
-  tunnel_mesh_step: 1
+  tunnel_dimensions: [4.375, 3.5] # cross-sections
+  tunnel_mesh_step: 0.5
 
 # base of the mesh file name
 mesh_name: random_fractures
@@ -56,7 +56,10 @@ hm_params:
     mesh: random_fractures.msh # healed mesh is used at the end (programmatically replaced)
     in_file: 01_hm
 
-    bulk_conductivity: &bulk_cond_init 6e-10  #6e-15
+    bulk_conductivity: &bulk_cond_init 6e-15  #6e-15
+    # K = k * rho * g /mu
+    # permeability k=6e-22 m2
+    # dynamic viscosity mu=0.001 Pa.s
 
     mechanics_solver__a_tol: 1e-14
     mechanics_solver__r_tol: 1e-7

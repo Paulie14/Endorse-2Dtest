@@ -377,7 +377,7 @@ class endorse_2Dtest(Simulation):
         geom = config_dict["geometry"]
         tunnel_mesh_step = geom['tunnel_mesh_step']
         dimensions = geom["box_dimensions"]
-        tunnel_dims = geom["tunnel_dimensions"]
+        tunnel_dims = np.array(geom["tunnel_dimensions"])/2
         tunnel_center = geom["tunnel_center"]
 
         print("load gmsh api")
@@ -396,10 +396,24 @@ class endorse_2Dtest(Simulation):
         side = factory.line([-dimensions[0]/2, 0, 0], [dimensions[0]/2, 0, 0])
         sides = dict(
             bottom=side.copy().translate([0, -dimensions[1] / 2, 0]),
-            top=side.copy().translate([0, +dimensions[1] / 2, 0]),
-            left=side.copy().translate([0, +dimensions[0] / 2, 0]).rotate([0, 0, 1], np.pi / 2),
-            right=side.copy().translate([0, -dimensions[0] / 2, 0]).rotate([0, 0, 1], np.pi / 2)
+            top   =side.copy().translate([0, +dimensions[1] / 2, 0]),
+            left  =side.copy().translate([0, +dimensions[0] / 2, 0]).rotate([0, 0, 1], np.pi / 2),
+            right =side.copy().translate([0, -dimensions[0] / 2, 0]).rotate([0, 0, 1], np.pi / 2)
         )
+
+        # dir_factor = 0.01
+        # d = dir_factor * np.array(dimensions)
+        # # dir_side = factory.line([0, 0, 0], [dimensions[0] * dir_factor, 0, 0])
+        # # dir_side = dir_side.translate([-dimensions[0] / 2, 0, 0])
+        # dir_sides = dict(
+        #     fix_bottom=factory.line([0, 0, 0], [d[0], 0, 0]).translate([-dimensions[0] / 2, -dimensions[1] / 2, 0]),
+        #     bottom=factory.line([0, 0, 0], [dimensions[0] - d[0], 0, 0]).translate([-dimensions[0] / 2 + d[0], -dimensions[1] / 2, 0]),
+        #     fix_left=factory.line([0, 0, 0], [0, d[1], 0]).translate([-dimensions[0] / 2, -dimensions[1] / 2, 0]),
+        #     left = factory.line([0, 0, 0], [0, dimensions[1] - d[1], 0]).translate([-dimensions[0] / 2, -dimensions[1] / 2 + d[1], 0])
+        #     # fix_bottom=dir_side.copy().translate([0, -dimensions[1] / 2, 0]),
+        #     # fix_left  =dir_side.copy().translate([0, +dimensions[0] / 2, 0]).rotate([0, 0, 1], np.pi / 2),
+        # )
+        # dir_sides_select = {key: value.copy() for key, value in dir_sides.items()}
 
         tunnel_disc = factory.disc(tunnel_center, *tunnel_dims)
         tunnel_select = tunnel_disc.copy()
@@ -412,6 +426,9 @@ class endorse_2Dtest(Simulation):
         # print("cut fractures by box without wells...")
         # fractures_shapes_group = fractures_shapes_group.intersect(box_drilled.copy())
         # print("fragment fractures...")
+        # dlist = factory.fragment(box_drilled, tunnel_disc, *[v for v in dir_sides.values()])
+        # box_fr = dlist[0]
+        # tunnel_fr = dlist[1]
         box_fr, tunnel_fr = factory.fragment(box_drilled, tunnel_disc)
 
         print("marking boundary regions...")
@@ -421,6 +438,9 @@ class endorse_2Dtest(Simulation):
         for name, side_tool in sides.items():
             isec = b_box_fr.select_by_intersect(side_tool)
             box_all.append(isec.modify_regions("." + name))
+        # for name, side_tool in dir_sides_select.items():
+        #     isec = b_box_fr.select_by_intersect(side_tool)
+        #     box_all.append(isec.modify_regions("." + name))
 
         if cut_tunnel:
             b_tunnel_select = tunnel_select.get_boundary()
@@ -628,4 +648,5 @@ class endorse_2Dtest(Simulation):
             ax1.legend()
 
             fig.tight_layout()  # otherwise the right y-label is slightly clipped
-            plt.show()
+            # plt.show()
+            plt.savefig("observe_pressure.pdf")
