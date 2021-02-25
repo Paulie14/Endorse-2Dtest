@@ -39,6 +39,13 @@ metacentrum:
     #- /storage/liberec3-tul/home/martin_spetlik/astra/gmsh/bin/gmsh
     - /storage/liberec3-tul/home/pavel_exner/WGC2020-THM-MC/wgc2020_model/env/bin/gmsh
 
+
+end_time: &end_time 350
+output_times: &output_times
+  - {begin: 0, step: 1, end: 20}
+  - {begin: 20, step: 5, end: 30}
+  - {begin: 30, step: 5, end: *end_time}
+
 geometry:
   # depth of the center of the box and of the coordinate system
 #  center_depth: 5000
@@ -58,6 +65,9 @@ hm_params:
     #mesh: three_frac_symmetric.msh
     mesh: random_fractures.msh # healed mesh is used at the end (programmatically replaced)
     in_file: 01_hm
+
+    output_times: *output_times
+    end_time: *end_time
 
     bulk_conductivity: &bulk_cond_init 6e-15  #6e-15
     # K = k * rho * g /mu

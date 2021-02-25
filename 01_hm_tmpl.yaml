@@ -14,8 +14,7 @@ problem: !Coupling_Sequential
         biot_alpha: 0.17
         fluid_density: 1000
     time:
-#      init_dt: 1
-      end_time: 350
+      end_time: <end_time>
       common_time_unit: d
     iteration_parameter: 1 # affects convergence of HM coupling (defaults to 1, lower value sometimes helps)
     a_tol: 0
@@ -77,10 +76,7 @@ problem: !Coupling_Sequential
 #                    value: $1
 
         output:
-          times: &output_times
-            - {begin: 0, step: 1, end: 20}
-            - {begin: 20, step: 5, end: 30}
-            - {begin: 30, step: 5, end: 350}
+          times: <output_times>
           fields:
             - piezo_head_p0
             - pressure_p0
@@ -103,7 +99,7 @@ problem: !Coupling_Sequential
           format: !vtk
           observe_points: *observe_points
         output:
-          times: *output_times
+          times: <output_times>
           fields:
 #            - { field: displacement, interpolation: P1_average }
             - displacement
