@@ -99,8 +99,7 @@ class endorse_2Dtest(Simulation):
                                need_sample_workspace=True  # If True, a sample directory is created
                                )
 
-    @staticmethod
-    def result_format() -> List[QuantitySpec]:
+    def result_format(self) -> List[QuantitySpec]:
         """
         Overrides Simulation.result_format
         :return:
@@ -108,14 +107,21 @@ class endorse_2Dtest(Simulation):
         # create simple instance of QuantitySpec for each quantity we want to collect
         # the time vector of the data must be specified here!
 
-        # TODO: define times according to output times of Flow123d
-        # TODO: how should be units defined (and other members)?
-        # step = 1
-        # end_time = 31
-        # times = list(range(0, end_time, step))
-        times = [0]
+        # read output times
+        times = []
+        output_times = self._config["output_times"]
+        for rec in output_times:
+            start = rec["begin"]
+            step = rec["step"]
+            end = rec["end"]
+            for t in np.arange(start, end, step):
+                times.append(int(t))
+        times.append(output_times[-1]["end"])
+
+        # create quantity spec
         spec = []
         spec.append(QuantitySpec(name="none", unit="", shape=(1, 1), times=times, locations=['none']))
+        # spec.append(QuantitySpec(name="tunnel_flux", unit="m.s-2", shape=(1, 1), times=times, locations=['.tunnel']))
         # spec.append(QuantitySpec(name="avg_temp_02", unit="C", shape=(1, 1), times=times, locations=['.well']))
         # spec.append(QuantitySpec(name="power_02", unit="J", shape=(1, 1), times=times, locations=['.well']))
         # spec.append(QuantitySpec(name="avg_temp_03", unit="C", shape=(1, 1), times=times, locations=['.well']))
