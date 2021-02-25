@@ -110,18 +110,20 @@ class endorse_2Dtest(Simulation):
 
         # TODO: define times according to output times of Flow123d
         # TODO: how should be units defined (and other members)?
-        step = 1
-        end_time = 31
-        times = list(range(0, end_time, step))
+        # step = 1
+        # end_time = 31
+        # times = list(range(0, end_time, step))
+        times = [0]
         spec = []
-        spec.append(QuantitySpec(name="avg_temp_02", unit="C", shape=(1, 1), times=times, locations=['.well']))
-        spec.append(QuantitySpec(name="power_02", unit="J", shape=(1, 1), times=times, locations=['.well']))
-        spec.append(QuantitySpec(name="avg_temp_03", unit="C", shape=(1, 1), times=times, locations=['.well']))
-        spec.append(QuantitySpec(name="power_03", unit="J", shape=(1, 1), times=times, locations=['.well']))
-        spec.append(QuantitySpec(name="avg_temp_04", unit="C", shape=(1, 1), times=times, locations=['.well']))
-        spec.append(QuantitySpec(name="power_04", unit="J", shape=(1, 1), times=times, locations=['.well']))
-        spec.append(QuantitySpec(name="n_fracture_elements", unit="-", shape=(1, 1), times=[0], locations=['-']))
-        spec.append(QuantitySpec(name="n_contact_elements", unit="-", shape=(1, 1), times=[0], locations=['-']))
+        spec.append(QuantitySpec(name="none", unit="", shape=(1, 1), times=times, locations=['none']))
+        # spec.append(QuantitySpec(name="avg_temp_02", unit="C", shape=(1, 1), times=times, locations=['.well']))
+        # spec.append(QuantitySpec(name="power_02", unit="J", shape=(1, 1), times=times, locations=['.well']))
+        # spec.append(QuantitySpec(name="avg_temp_03", unit="C", shape=(1, 1), times=times, locations=['.well']))
+        # spec.append(QuantitySpec(name="power_03", unit="J", shape=(1, 1), times=times, locations=['.well']))
+        # spec.append(QuantitySpec(name="avg_temp_04", unit="C", shape=(1, 1), times=times, locations=['.well']))
+        # spec.append(QuantitySpec(name="power_04", unit="J", shape=(1, 1), times=times, locations=['.well']))
+        # spec.append(QuantitySpec(name="n_fracture_elements", unit="-", shape=(1, 1), times=[0], locations=['-']))
+        # spec.append(QuantitySpec(name="n_contact_elements", unit="-", shape=(1, 1), times=[0], locations=['-']))
         return spec
 
     @staticmethod
@@ -196,53 +198,53 @@ class endorse_2Dtest(Simulation):
 
     @staticmethod
     def collect_results(config_dict):
-        filenames = ["energy_balance.yaml",
-                     "water_balance.yaml",
-                     "Heat_AdvectionDiffusion_region_stat.yaml"]
-
-        print("Extracting results...")
-        # read regions of interest
-        # bc_regions = ['.fr_left_well', '.left_well', '.fr_right_well', '.right_well']
-        # out_regions = bc_regions[2:]
-        with open("regions.yaml", 'r') as f:
-            regions_dict = yaml.load(f, yaml.CSafeLoader)
-            bc_regions = [*regions_dict["left_well_fracture_regions"], *regions_dict["right_well_fracture_regions"]]
-            out_regions = regions_dict["right_well_fracture_regions"]
-
-        n_times = 0
-        result = []
-        for variant in config_dict["variants"]:
-            print("collecting TH - variant '{}'...".format(variant))
-            config_dict[variant]["output_dir"] = "output_" + config_dict[variant]["in_file"]
-
-            result_files = list()
-            result_files.extend([os.path.join(config_dict[variant]["output_dir"], f) for f in filenames])
-            files_present = all([os.path.isfile(f) for f in result_files])
-            if not files_present:
-                raise Exception("Not all result files present.")
-            avg_temp, power = endorse_2Dtest.extract_th_results(config_dict[variant]["output_dir"],
-                                                                  out_regions, bc_regions)
-            n_times=len(power)
-            endorse_2Dtest.check_data(avg_temp, config_dict["extract"]["temp_min"],
-                                        config_dict["extract"]["temp_max"])
-            endorse_2Dtest.check_data(power, config_dict["extract"]["power_min"],
-                                        config_dict["extract"]["power_max"])
-
-            result.extend(avg_temp)
-            result.extend(power)
-
-        fr_file = "fr_param_stats.yaml"
-        if os.path.isfile(fr_file):
-            with open(fr_file, 'r') as f:
-                fr_param_dict = yaml.load(f, yaml.CSafeLoader)
-                result.extend([fr_param_dict["n_fracture_elements"]]*n_times)
-                result.extend([fr_param_dict["n_contact_elements"]]*n_times)
-        else:
-            raise Exception("Fracture stats file '{}' not present.".format(fr_file))
-
-        print("Extracting results...finished")
-
-        return [result, result]
+        # filenames = ["energy_balance.yaml",
+        #              "water_balance.yaml",
+        #              "Heat_AdvectionDiffusion_region_stat.yaml"]
+        #
+        # print("Extracting results...")
+        # # read regions of interest
+        # # bc_regions = ['.fr_left_well', '.left_well', '.fr_right_well', '.right_well']
+        # # out_regions = bc_regions[2:]
+        # with open("regions.yaml", 'r') as f:
+        #     regions_dict = yaml.load(f, yaml.CSafeLoader)
+        #     bc_regions = [*regions_dict["left_well_fracture_regions"], *regions_dict["right_well_fracture_regions"]]
+        #     out_regions = regions_dict["right_well_fracture_regions"]
+        #
+        # n_times = 0
+        # result = []
+        # for variant in config_dict["variants"]:
+        #     print("collecting TH - variant '{}'...".format(variant))
+        #     config_dict[variant]["output_dir"] = "output_" + config_dict[variant]["in_file"]
+        #
+        #     result_files = list()
+        #     result_files.extend([os.path.join(config_dict[variant]["output_dir"], f) for f in filenames])
+        #     files_present = all([os.path.isfile(f) for f in result_files])
+        #     if not files_present:
+        #         raise Exception("Not all result files present.")
+        #     avg_temp, power = endorse_2Dtest.extract_th_results(config_dict[variant]["output_dir"],
+        #                                                           out_regions, bc_regions)
+        #     n_times=len(power)
+        #     endorse_2Dtest.check_data(avg_temp, config_dict["extract"]["temp_min"],
+        #                                 config_dict["extract"]["temp_max"])
+        #     endorse_2Dtest.check_data(power, config_dict["extract"]["power_min"],
+        #                                 config_dict["extract"]["power_max"])
+        #
+        #     result.extend(avg_temp)
+        #     result.extend(power)
+        #
+        # fr_file = "fr_param_stats.yaml"
+        # if os.path.isfile(fr_file):
+        #     with open(fr_file, 'r') as f:
+        #         fr_param_dict = yaml.load(f, yaml.CSafeLoader)
+        #         result.extend([fr_param_dict["n_fracture_elements"]]*n_times)
+        #         result.extend([fr_param_dict["n_contact_elements"]]*n_times)
+        # else:
+        #     raise Exception("Fracture stats file '{}' not present.".format(fr_file))
+        #
+        # print("Extracting results...finished")
+        return endorse_2Dtest.empty_result()
+        # return [result, result]
 
     @staticmethod
     def empty_result():
@@ -559,66 +561,66 @@ class endorse_2Dtest(Simulation):
 
 
 
-    @staticmethod
-    def extract_time_series(yaml_stream, regions, extract):
-        """
+    # @staticmethod
+    # def extract_time_series(yaml_stream, regions, extract):
+    #     """
+    #
+    #     :param yaml_stream:
+    #     :param regions:
+    #     :return: times list, list: for every region the array of value series
+    #     """
+    #     data = yaml.load(yaml_stream, yaml.CSafeLoader)['data']
+    #     times = set()
+    #     reg_series = {reg: [] for reg in regions}
+    #
+    #     for time_data in data:
+    #         region = time_data['region']
+    #         if region in reg_series:
+    #             times.add(time_data['time'])
+    #             power_in_time = extract(time_data)
+    #             reg_series[region].append(power_in_time)
+    #     times = list(times)
+    #     times.sort()
+    #     series = [np.array(region_series, dtype=float) for region_series in reg_series.values()]
+    #     return np.array(times), np.array(series)
+    #
+    # @staticmethod
+    # def extract_th_results(output_dir, out_regions, bc_regions):
+    #     with open(os.path.join(output_dir, "energy_balance.yaml"), "r") as f:
+    #         power_times, reg_powers = endorse_2Dtest.extract_time_series(f, bc_regions, extract=lambda frame: frame['data'][0])
+    #         power_series = -sum(reg_powers)
+    #
+    #     with open(os.path.join(output_dir, "Heat_AdvectionDiffusion_region_stat.yaml"), "r") as f:
+    #         temp_times, reg_temps = endorse_2Dtest.extract_time_series(f, out_regions, extract=lambda frame: frame['average'][0])
+    #     with open(os.path.join(output_dir, "water_balance.yaml"), "r") as f:
+    #         flux_times, reg_fluxes = endorse_2Dtest.extract_time_series(f, out_regions, extract=lambda frame: frame['data'][0])
+    #     sum_flux = sum(reg_fluxes)
+    #
+    #     reg_temps = reg_temps - endorse_2Dtest.zero_temperature_offset
+    #
+    #     avg_temp_flux = sum([temp * flux for temp, flux in zip(reg_temps, reg_fluxes)]) / sum_flux
+    #     return avg_temp_flux, power_series
 
-        :param yaml_stream:
-        :param regions:
-        :return: times list, list: for every region the array of value series
-        """
-        data = yaml.load(yaml_stream, yaml.CSafeLoader)['data']
-        times = set()
-        reg_series = {reg: [] for reg in regions}
-
-        for time_data in data:
-            region = time_data['region']
-            if region in reg_series:
-                times.add(time_data['time'])
-                power_in_time = extract(time_data)
-                reg_series[region].append(power_in_time)
-        times = list(times)
-        times.sort()
-        series = [np.array(region_series, dtype=float) for region_series in reg_series.values()]
-        return np.array(times), np.array(series)
-
-    @staticmethod
-    def extract_th_results(output_dir, out_regions, bc_regions):
-        with open(os.path.join(output_dir, "energy_balance.yaml"), "r") as f:
-            power_times, reg_powers = endorse_2Dtest.extract_time_series(f, bc_regions, extract=lambda frame: frame['data'][0])
-            power_series = -sum(reg_powers)
-
-        with open(os.path.join(output_dir, "Heat_AdvectionDiffusion_region_stat.yaml"), "r") as f:
-            temp_times, reg_temps = endorse_2Dtest.extract_time_series(f, out_regions, extract=lambda frame: frame['average'][0])
-        with open(os.path.join(output_dir, "water_balance.yaml"), "r") as f:
-            flux_times, reg_fluxes = endorse_2Dtest.extract_time_series(f, out_regions, extract=lambda frame: frame['data'][0])
-        sum_flux = sum(reg_fluxes)
-
-        reg_temps = reg_temps - endorse_2Dtest.zero_temperature_offset
-
-        avg_temp_flux = sum([temp * flux for temp, flux in zip(reg_temps, reg_fluxes)]) / sum_flux
-        return avg_temp_flux, power_series
-
-    @staticmethod
-    def plot_exchanger_evolution(temp_times, avg_temp, power_times, power_series):
-        year_sec = 60 * 60 * 24 * 365
-
-        import matplotlib.pyplot as plt
-        fig, ax1 = plt.subplots()
-        temp_color = 'red'
-        ax1.set_xlabel('time [y]')
-        ax1.set_ylabel('Temperature [C deg]', color=temp_color)
-        ax1.plot(temp_times[1:] / year_sec, avg_temp[1:], color=temp_color)
-        ax1.tick_params(axis='y', labelcolor=temp_color)
-
-        ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
-        pow_color = 'blue'
-        ax2.set_ylabel('Power [MW]', color=pow_color)  # we already handled the x-label with ax1
-        ax2.plot(power_times[1:] / year_sec, power_series[1:] / 1e6, color=pow_color)
-        ax2.tick_params(axis='y', labelcolor=pow_color)
-
-        fig.tight_layout()  # otherwise the right y-label is slightly clipped
-        plt.show()
+    # @staticmethod
+    # def plot_exchanger_evolution(temp_times, avg_temp, power_times, power_series):
+    #     year_sec = 60 * 60 * 24 * 365
+    #
+    #     import matplotlib.pyplot as plt
+    #     fig, ax1 = plt.subplots()
+    #     temp_color = 'red'
+    #     ax1.set_xlabel('time [y]')
+    #     ax1.set_ylabel('Temperature [C deg]', color=temp_color)
+    #     ax1.plot(temp_times[1:] / year_sec, avg_temp[1:], color=temp_color)
+    #     ax1.tick_params(axis='y', labelcolor=temp_color)
+    #
+    #     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+    #     pow_color = 'blue'
+    #     ax2.set_ylabel('Power [MW]', color=pow_color)  # we already handled the x-label with ax1
+    #     ax2.plot(power_times[1:] / year_sec, power_series[1:] / 1e6, color=pow_color)
+    #     ax2.tick_params(axis='y', labelcolor=pow_color)
+    #
+    #     fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    #     plt.show()
 
     @staticmethod
     def observe_time_plot(config_dict):
@@ -634,8 +636,6 @@ class endorse_2Dtest(Simulation):
             times = np.array([d["time"] for d in data]).transpose()
 
             v = values[0, 0:]
-
-            import matplotlib.pyplot as plt
 
             fig, ax1 = plt.subplots()
             temp_color = ['red', 'green', 'violet', 'blue']
