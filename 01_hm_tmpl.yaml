@@ -159,9 +159,9 @@ problem: !Coupling_Sequential
             time: 0
             bc_type: traction
             bc_traction: !FieldFormula
-              value: [-45e6*(1/(17*86400)*t)*x / sqrt(x*x+y*y), -11e6*(1/(17*86400)*t)*y / sqrt(x*x+y*y), 0] # 1d=86400s
+              value: [-45e6*(1/(17*86400)*t)*x / sqrt(x*x + (<tunnel_dimX>/<tunnel_dimY>)^4*y*y), -11e6*(1/(17*86400)*t)*y / sqrt((<tunnel_dimY>/<tunnel_dimX>)^4*x*x + y*y), 0] # 1d=86400s
           - region: .tunnel
             time: 17
             bc_type: traction
             bc_traction: !FieldFormula
-              value: [ -45e6*x / sqrt(x*x+y*y), -11e6*y / sqrt(x*x+y*y), 0 ] # 1d=86400s
+              value: [ -45e6*x / sqrt(x*x + (<tunnel_dimX>/<tunnel_dimY>)^4*y*y), -11e6*y / sqrt((<tunnel_dimY>/<tunnel_dimX>)^4*x*x + y*y), 0 ] # 1d=86400s

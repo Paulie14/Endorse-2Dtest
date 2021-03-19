@@ -53,7 +53,8 @@ geometry:
   box_dimensions: [100, 100]
   # tunnel center
   tunnel_center: [0, 0, 0]
-  tunnel_dimensions: [4.375, 3.5] # cross-sections
+  tunnel_dimX: &tunnel_dimX 4.375 # X cross-section
+  tunnel_dimY: &tunnel_dimY 3.5 # X cross-section
   tunnel_mesh_step: 0.5
 
 # base of the mesh file name
@@ -69,6 +70,8 @@ hm_params:
     output_times: *output_times
     end_time: *end_time
 
+    tunnel_dimX: *tunnel_dimX
+    tunnel_dimY: *tunnel_dimY
     bulk_conductivity: &bulk_cond_init 6e-15  #6e-15
     # K = k * rho * g /mu
     # permeability k=6e-22 m2

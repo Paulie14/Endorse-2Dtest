@@ -385,7 +385,7 @@ class endorse_2Dtest(Simulation):
         geom = config_dict["geometry"]
         tunnel_mesh_step = geom['tunnel_mesh_step']
         dimensions = geom["box_dimensions"]
-        tunnel_dims = np.array(geom["tunnel_dimensions"])/2
+        tunnel_dims = np.array([geom["tunnel_dimX"], geom["tunnel_dimY"]])/2
         tunnel_center = geom["tunnel_center"]
 
         print("load gmsh api")
