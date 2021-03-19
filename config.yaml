@@ -40,10 +40,10 @@ metacentrum:
     - /storage/liberec3-tul/home/pavel_exner/WGC2020-THM-MC/wgc2020_model/env/bin/gmsh
 
 
-end_time: &end_time 350
+end_time: &end_time 365
 output_times: &output_times
   - {begin: 0, step: 1, end: 20}
-  - {begin: 20, step: 5, end: 30}
+  - {begin: 20, step: 2, end: 30}
   - {begin: 30, step: 5, end: *end_time}
 
 geometry:
@@ -72,6 +72,7 @@ hm_params:
 
     tunnel_dimX: *tunnel_dimX
     tunnel_dimY: *tunnel_dimY
+
     bulk_conductivity: &bulk_cond_init 6e-15  #6e-15
     # K = k * rho * g /mu
     # permeability k=6e-22 m2
